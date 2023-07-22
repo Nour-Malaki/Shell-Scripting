@@ -1,0 +1,175 @@
+echo " --------------------------------------------------------- "
+
+echo "           Welcome to my Program           "
+
+#ReadFile function asks the user to enter the name of the file to read it
+
+ReadFile(){
+
+#While Loop To Check If The Read Operation Succeeded
+
+while true 
+
+do
+
+   echo " --------------------------------------------------------- "
+
+   echo " Enter the Text File Name That You Would Like To Process "
+
+   read filename
+
+ 
+   if [ ! -e "$filename" ]; then
+   
+     echo "          $filename does not Exist, Try Again!         "
+     echo " --------------------------------------------------------- "
+        echo "      Would You Like To Try Another File? (y) or (n)    "
+     read flag
+   
+     if [ "$flag" = "y" ]; then
+     
+         continue
+   
+     else
+      
+         echo " --------------------------------------------------------- "
+     
+         echo "                Exiting From The Program!               "
+     
+        exit 1
+   
+     fi
+ 
+   else 
+   
+     if ! [[ "${filename: -4}" == ".csv" ]]; then # checking format of the file
+ 
+     
+        echo "     wrong format!!    "
+        echo " --------------------------------------------------------- "
+     
+        echo "      Would You Like To Try Another File? (y) or (n)      "
+     
+        read flag
+       
+        if [ "$flag" = "y" ]; then
+         
+           continue
+       
+       else 
+         
+           echo " --------------------------------------------------------- "
+          
+           echo "                Exiting From The Program!               "
+         
+           exit 1
+       
+       fi   
+   
+     else
+     
+          echo " --------------------------------------------------------- "
+     
+          echo "           You Read from $filename Successfully!           "
+     
+          echo " --------------------------------------------------------- "
+     
+          cat "$filename" > temp.txt
+     
+          break
+   
+     fi 
+ 
+  fi
+
+done
+
+}
+
+Dimensions() {
+  rows=$(cat $filename | wc -l)
+  cols=$(cat $filename | head -2 | tail -1 | sed 's/[^,]//g' | wc -c)
+  echo "Rows = $((rows - 1)), Columns = $((cols)) -> $((rows -1)) X $cols"
+}
+
+Statistics(){
+  rows=$(cat $filename | wc -l)
+  cols=$(cat $filename | head -2 | tail -1 | sed 's/[^,]//g' | wc -c)
+  printf "\nMin "
+  for((i=1;i<=cols;i++)); do
+  cut -d',' -f $i $filename > calcMin.csv
+  awk 'min=="" || $cols < min {min=$cols} END{print min}' calcMin.csv
+  #paste -s calcMin.csv
+  #cat calcMin.csv
+  done
+
+ echo Max
+  for((i=1;i<=cols;i++)); do
+  sed '1d' $filename|cut -d',' -f $i > calcMax.csv
+  awk 'max=="" || $i > max {max=$i} END{print max}' calcMax.csv
+  done
+
+  printf "\nMean "
+  sed '1d' $filename | awk -F',' '{ 
+  for(i=1;i<=NF;i++) {total[i]+=$i ;} } 
+    END { for(i=1;i<=NF;i++) printf "%f ",total[i]/NR ;}' 
+    
+    #awk '{for(i=1;i<=NF;i++)s+=$i;M=s/NF;
+     # for(i=1;i<=NF;i++)sd+=(($i-M)^2);$(NF+1)=sqrt(sd/NF);M=sd=s=0}1' $filename
+
+   
+ }
+
+Substitute(){
+    for((i=1;i<=cols;i++)) do
+        sed '1d' $filename | cut -d',' -f$i > f$i.txt
+        total=0
+        count=0
+        while read line 
+        do
+            if [ ! -z $line ]
+                then
+                    echo hii
+                    total=$(($total + $line))
+                    count=$(($count + 1))
+            fi
+    
+        done > f$i.txt
+            mean=$(($total / $count))
+            echo $mean
+    
+            sed 's/^$/,'$mean',/g' $filename
+    done
+}
+
+count=$(echo "$count + 1.0" | bc)
+                total=$(echo "$total + $line" | bc)
+ReadFile
+
+
+while true
+do
+  printf "\nPress [D] to display dimensions:
+Press [C] to display statistics:
+Press [S] to manipulate substitution:
+Press [E] to Exit.\n"
+  read choice
+
+  case $choice in
+    "D")
+      Dimensions
+      ;;
+    "C")
+      Statistics
+      ;;
+    "S")
+      Substitute
+      ;;
+    "E")
+      exit 0
+      ;;
+    *)
+      echo "Enter a valid choice"
+      ;;
+  esac
+done
